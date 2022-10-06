@@ -26,6 +26,7 @@ dependencies:
 - text
 - parser-combinators
 - prettyprinter
+- syb
 
 ghc-options:
 - -Wall

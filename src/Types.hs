@@ -1,15 +1,18 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 module Types where
 import Data.Text (Text)
+import Data.Data (Data)
+import Data.Dynamic (Typeable)
 
 data Decl
   = Fix Text Type Expr
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Data, Typeable)
 
 data Type
   = TyVar Text
   | TyTuple Type Type
   | TyArr Type Type
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Data, Typeable)
 
 data Expr
   = Lambda [(Text, Type)] Expr
@@ -18,6 +21,11 @@ data Expr
   | Tuple Expr Expr
   | Apply Expr Expr
   | Var Text
-  | Match Expr [(Text, Expr)]
-  deriving (Eq, Ord, Show)
+  | Match Expr [(Pat, Expr)]
+  deriving (Eq, Ord, Show, Data, Typeable)
+
+data Pat
+  = RecordCtor Text
+  | Raw Text
+  deriving (Eq, Ord, Show, Data, Typeable)
 

@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings               #-}
+{-# LANGUAGE TypeApplications                #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
 module Parser where
@@ -13,9 +14,12 @@ import Types
 import Data.Foldable (asum)
 import Data.Char (isAlphaNum, isAlpha)
 import qualified Data.Text as T
-import Control.Monad (void)
+import Control.Monad (void, (<=<))
 import Prettyprinter (pretty)
 import Pretty ()
+import Eval (eval)
+import Transform
+import Language.Haskell.Interpreter hiding (eval)
 
 type Parser = Parsec Void Text
 
@@ -36,7 +40,14 @@ okAfter '_' = True
 okAfter x = isAlphaNum x
 
 var :: Parser Text
-var = fmap T.pack $ lexeme sp $ (:) <$> satisfy okFirst <*> many (satisfy okAfter)
+var = asum
+  [ bracketed $ l "Util.Id.Id" *> between "\"" "\"" rawvar
+  , l "Util.Id.Id" *> between "\"" "\"" rawvar
+  , lexeme sp rawvar
+  ]
+
+rawvar :: Parser Text
+rawvar = fmap T.pack $ (:) <$> satisfy okFirst <*> many (satisfy okAfter)
 
 bracketed :: Parser a -> Parser a
 bracketed = between (l "(")  (l ")")
@@ -66,14 +77,14 @@ param = do
   t <- parseType
   pure (v, t)
 
-alt :: Parser (Text, Expr)
+alt :: Parser (Pat, Expr)
 alt = do
   l "|"
   con <- var
   l "_"
   l "->"
   e <- expr
-  pure $ (con, e)
+  pure $ (RecordCtor con, e)
 
 expr :: Parser Expr
 expr = makeExprParser exprTerm
@@ -107,11 +118,23 @@ decl = do
 
 
 main :: IO ()
-main = putStrLn $ either errorBundlePretty (show . pretty) $ parse decl "interactive" test
+main = do
+  let res = fmap fixTerm $ parse decl "interactive" test
+  putStrLn $ either errorBundlePretty (show . pretty) res
+  either (putStrLn . errorBundlePretty) (putStrLn . either showGHC (\f -> show $ f ([False, True, True, False], 1)) <=< eval @(([Bool], Int) -> [Bool])) res
+
+showGHC :: InterpreterError -> String
+showGHC (UnknownError s) = s
+showGHC (WontCompile ges) = unlines $ fmap showx ges
+showGHC (NotAllowed s) = s
+showGHC (GhcException s) = s
+
+showx :: GhcError -> String
+showx = errMsg
 
 test :: Text
 test = T.unlines
-  [ "fix (f:list * nat -> nat) = "
+  [ "fix ((Util.Id.Id \"f\"):list * nat -> list) = "
   , "fun (x:list * nat) -> "
   , "match x . 0 with"
   , "  | Nil _ -> x . 0"

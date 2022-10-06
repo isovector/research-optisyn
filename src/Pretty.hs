@@ -29,14 +29,21 @@ instance Pretty Expr where
     ]
 
 instance Pretty Decl where
-  pretty (Fix txt ty ex) = vcat
-    [ pretty txt <+> "::" <+> pretty ty
-    , pretty txt <+> "=" <+> pretty ex
-    ]
+  pretty (Fix txt ty ex) =
+    "let" <+> align (
+      vcat
+        [ pretty txt <+> "::" <+> pretty ty
+        , pretty txt <+> "=" <+> pretty ex
+        ]
+                       )
 
-prettyMatch :: (Text, Expr) -> Doc ann
-prettyMatch (txt, ex) = sep
-  [ pretty txt <+> "{}" <+> "->"
+instance Pretty Pat where
+  pretty (RecordCtor txt) = pretty txt <+> "{}"
+  pretty (Raw txt) = pretty txt
+
+prettyMatch :: (Pat, Expr) -> Doc ann
+prettyMatch (pat, ex) = sep
+  [ pretty pat <+> "->"
   , indent 2 (pretty ex)
   ]
 
