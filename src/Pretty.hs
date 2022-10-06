@@ -12,6 +12,7 @@ instance Pretty Type where
   pretty (TyVar txt) = pretty txt
   pretty (TyTuple ty' ty2) = parens $ pretty ty' <> "," <+> pretty ty2
   pretty (TyArr ty' ty2) = parens $ pretty ty' <+> "->" <+> pretty ty2
+  pretty TyUnit = parens ""
 
 instance Pretty Expr where
   pretty (Lambda x0 ex') = parens $ sep
@@ -27,6 +28,7 @@ instance Pretty Expr where
     [ "case" <+> pretty ex' <+> "of"
     , indent 2 $ braces (align $ vsep $ punctuate ";" $ fmap prettyMatch x0)
     ]
+  pretty Unit = parens ""
 
 instance Pretty Decl where
   pretty (Fix txt ty ex) =
@@ -40,6 +42,17 @@ instance Pretty Decl where
 instance Pretty Pat where
   pretty (RecordCtor txt) = pretty txt <+> "{}"
   pretty (Raw txt) = pretty txt
+
+instance Pretty TyDecl where
+  pretty (TyDecl txt x0) = vcat
+    [ "type" <+> pretty txt <+> "="
+    , indent 2 $ vcat $ fmap prettyCon x0
+    ]
+
+prettyCon :: (Text, Type) -> Doc ann
+prettyCon (txt, TyUnit) = "|" <+> pretty txt
+prettyCon (txt, ty) = "|" <+> pretty txt <+> "of" <+> pretty ty
+
 
 prettyMatch :: (Pat, Expr) -> Doc ann
 prettyMatch (pat, ex) = sep

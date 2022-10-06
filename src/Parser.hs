@@ -20,6 +20,7 @@ import Pretty ()
 import Eval (eval)
 import Transform
 import Language.Haskell.Interpreter hiding (eval)
+import GenType
 
 type Parser = Parsec Void Text
 
@@ -81,6 +82,7 @@ alt :: Parser (Pat, Expr)
 alt = do
   l "|"
   con <- var
+
   l "_"
   l "->"
   e <- expr
@@ -121,6 +123,8 @@ main :: IO ()
 main = do
   let res = fmap fixTerm $ parse decl "interactive" test
   putStrLn $ either errorBundlePretty (show . pretty) res
+  putStrLn $ show $ pretty $ toBurstDecl @(Bool)
+  putStrLn $ show $ pretty $ toBurstDecl @(Maybe Bool)
   either (putStrLn . errorBundlePretty) (putStrLn . either showGHC (\f -> show $ f ([False, True, True, False], 1)) <=< eval @(([Bool], Int) -> [Bool])) res
 
 showGHC :: InterpreterError -> String

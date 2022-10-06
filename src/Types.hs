@@ -12,6 +12,7 @@ data Type
   = TyVar Text
   | TyTuple Type Type
   | TyArr Type Type
+  | TyUnit
   deriving (Eq, Ord, Show, Data, Typeable)
 
 data Expr
@@ -22,6 +23,10 @@ data Expr
   | Apply Expr Expr
   | Var Text
   | Match Expr [(Pat, Expr)]
+  | Unit
+  deriving (Eq, Ord, Show, Data, Typeable)
+
+data TyDecl = TyDecl Text [(Text, Type)]
   deriving (Eq, Ord, Show, Data, Typeable)
 
 data Pat

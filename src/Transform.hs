@@ -35,6 +35,3 @@ vars = \case
 fixTerm :: GenericT
 fixTerm = everywhere $ mkT natPat `extT` vars
 
-
-
-
