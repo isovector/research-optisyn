@@ -1,0 +1,44 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           research-optisyn
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/isovector/research-optisyn#readme>
+homepage:       https://github.com/isovector/research-optisyn#readme
+bug-reports:    https://github.com/isovector/research-optisyn/issues
+author:         Sandy Maguire
+maintainer:     sandy@sandymaguire.me
+copyright:      Sandy Maguire
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/isovector/research-optisyn
+
+library
+  exposed-modules:
+      Lib
+      Parser
+      Pretty
+      Types
+  other-modules:
+      Paths_research_optisyn
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+    , hint
+    , megaparsec
+    , parser-combinators
+    , prettyprinter
+    , text
+  default-language: Haskell2010
