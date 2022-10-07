@@ -13,7 +13,7 @@
 
 module GenType (toBurstDecl, BurstRef(..), ToBurstType(..), Marshall(..)) where
 
-import GHC.Generics
+import GHC.Generics hiding (conName)
 import Types
 import Data.Kind (Constraint)
 import qualified Data.Kind as K
@@ -29,6 +29,9 @@ data Nat = O | S Nat
 
 instance Marshall Nat
 instance BurstRef Nat
+
+instance (BurstRef a, Marshall a) => Marshall [a]
+instance BurstRef [a]
 
 instance Marshall Bool
 instance BurstRef Bool
@@ -60,14 +63,28 @@ class GToBurstDecl f where
   gtoBurstDecl :: TyDecl
 
 instance (KnownSymbol nm, GToBurstCons f) => GToBurstDecl (D1 ('MetaData nm _1 _2 _3) f) where
-  gtoBurstDecl = TyDecl (T.pack $ lowerFirst $ symbolVal $ Proxy @nm) $ gtoBurstCons @f
+  gtoBurstDecl = TyDecl (typeName @nm) $ gtoBurstCons @f
+
+
+typeName :: forall nm. KnownSymbol nm => Text
+typeName = T.pack $
+  case lowerFirst $ symbolVal $ Proxy @nm of
+    "[]" -> "list"
+    t -> t
+
+conName :: forall nm. KnownSymbol nm => Text
+conName = T.pack $
+  case symbolVal $ Proxy @nm of
+    "[]" -> "Nil"
+    ":" -> "Cons"
+    t -> t
 
 type GToBurstCons :: (K.Type -> K.Type) -> Constraint
 class GToBurstCons f where
   gtoBurstCons :: [(Text, Type)]
 
 instance (KnownSymbol nm, GToBurstType f) => GToBurstCons (C1 ('MetaCons nm _1 _2) f) where
-  gtoBurstCons = pure (T.pack $ symbolVal $ Proxy @nm, gtoBurstType @f)
+  gtoBurstCons = pure (conName @nm, gtoBurstType @f)
 
 instance (GToBurstCons f, GToBurstCons g) => GToBurstCons (f :+: g) where
   gtoBurstCons = gtoBurstCons @f ++ gtoBurstCons @g
@@ -89,7 +106,7 @@ class GBurstRef f where
   gburstRef :: Text
 
 instance KnownSymbol nm => GBurstRef (M1 D ('MetaData nm _1 _2 _3) _5) where
-  gburstRef = T.pack $ lowerFirst $ symbolVal $ Proxy @nm
+  gburstRef = typeName @nm
 
 lowerFirst :: String -> String
 lowerFirst [] = []
@@ -112,10 +129,10 @@ instance (GMarshall f) => GMarshall (M1 _1 _2 f) where
   gmarshall (M1 a) = gmarshall a
 
 instance {-# OVERLAPPING #-} (KnownSymbol nm, GMarshall f) => GMarshall (M1 C ('MetaCons nm _1 _2) f) where
-  gmarshall (M1 a) = Apply (Var $ T.pack $ symbolVal $ Proxy @nm) $ gmarshall a
+  gmarshall (M1 a) = Apply (Var $ conName @nm) $ gmarshall a
 
 instance {-# OVERLAPPING #-} (KnownSymbol nm) => GMarshall (M1 C ('MetaCons nm _1 _2) U1) where
-  gmarshall (M1 _) = Var $ T.pack $ symbolVal $ Proxy @nm
+  gmarshall (M1 _) = Var $ conName @nm
 
 instance (GMarshall f, GMarshall g) => GMarshall (f :+: g) where
   gmarshall (L1 a) = gmarshall a
@@ -126,4 +143,5 @@ instance GToBurstType U1 where
 
 instance GMarshall U1 where
   gmarshall _ = Unit
+
 

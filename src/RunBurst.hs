@@ -7,7 +7,7 @@ module RunBurst where
 import System.Process
 import Example
 import GenType
-import Pretty (toBurst)
+import Pretty (toBurst, toHaskell)
 import Text.Megaparsec
 import qualified Data.Text as T
 import Transform
@@ -15,6 +15,7 @@ import Parser
 import Eval (eval)
 import Data.Typeable (Typeable)
 import System.IO.Unsafe (unsafePerformIO)
+import Types (bd_context)
 
 runBurst
     :: forall a b
@@ -23,7 +24,9 @@ runBurst
     -> [a]
     -> Maybe (a -> b)
 runBurst f as = unsafePerformIO $ do
-  let doc = mkExample f as
+  let doc' = mkExample f as
+      doc = doc' { bd_context = toBurstDecl @Bool : bd_context doc' }
+
   let fp = "/tmp/burst"
   writeFile fp $ show $ toBurst doc
   res <- fmap (unlines . takeWhile (/= ";") . lines) $ readProcess "burst" [fp] ""
@@ -33,6 +36,7 @@ runBurst f as = unsafePerformIO $ do
       putStrLn $ errorBundlePretty peb
       pure Nothing
     Right term -> do
+      putStrLn $ show $ toHaskell term
       eval @(a -> b) term >>= \case
         Left ie -> do
           putStrLn $ showGHC ie

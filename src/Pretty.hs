@@ -105,7 +105,7 @@ instance ToBurst Example where
 
 burstCon :: (Text, Type) -> Doc ann
 burstCon (txt, TyUnit) = "|" <+> toBurst txt
-burstCon (txt, ty) = "|" <+> toBurst txt <+> "of" <+> toHaskell ty
+burstCon (txt, ty) = "|" <+> toBurst txt <+> "of" <+> toBurst ty
 
 
 hsMatch :: (Pat, Expr) -> Doc ann
