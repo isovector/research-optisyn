@@ -40,11 +40,15 @@ okAfter '_' = True
 okAfter x = isAlphaNum x
 
 var :: Parser Text
-var = asum
-  [ bracketed $ l "Util.Id.Id" *> between "\"" "\"" rawvar
-  , l "Util.Id.Id" *> between "\"" "\"" rawvar
-  , lexeme sp rawvar
-  ]
+var = do
+  r <- asum
+    [ bracketed $ var
+    , l "Util.Id.Id" *> between (l "\"") "\"" rawvar
+    , lexeme sp rawvar
+    ]
+  case elem r ["match", "with", "fun"] of
+    False -> pure r
+    True -> fail "matched a var against a keyword"
 
 rawvar :: Parser Text
 rawvar = fmap T.pack $ (:) <$> satisfy okFirst <*> many (satisfy okAfter)
@@ -137,12 +141,18 @@ showx = errMsg
 
 test :: Text
 test = T.unlines
-  [ "fix ((Util.Id.Id \"f\"):list * nat -> list) = "
-  , "fun (x:list * nat) -> "
-  , "match x . 0 with"
-  , "  | Nil _ -> x . 0"
-  , "  | Cons _ -> (match x . 1 with"
-  , "                 | O _ -> x . 0"
-  , "                 | S _ -> f (Un_Cons (x . 0) . 1, Un_S (x . 1)))"
+  [ "fix (f : bool -> boo) ="
+  , "  fun (x : bool) ->"
+  , "    match (x with"
+  , "      | False _ -> True"
+  , "      | True _ -> False"
   ]
+  -- [ "fix ((Util.Id.Id \"f\"):list * nat -> list) = "
+  -- , "fun (x:list * nat) -> "
+  -- , "match x . 0 with"
+  -- , "  | Nil _ -> x . 0"
+  -- , "  | Cons _ -> (match x . 1 with"
+  -- , "                 | O _ -> x . 0"
+  -- , "                 | S _ -> f (Un_Cons (x . 0) . 1, Un_S (x . 1)))"
+  -- ]
 
