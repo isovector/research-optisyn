@@ -31,7 +31,7 @@ instance ToBurst Type where
   toBurst (TyVar txt) = toBurst txt
   toBurst (TyTuple ty' ty2) = parens $ toBurst ty' <+> "*" <+> toBurst ty2
   toBurst (TyArr ty' ty2) = parens $ toBurst ty' <+> "->" <+> toBurst ty2
-  toBurst TyUnit = parens ""
+  toBurst TyUnit = parens "u1"
 
 instance ToHaskell Expr where
   toHaskell (Lambda x0 ex') = parens $ sep
@@ -65,7 +65,7 @@ instance ToBurst Expr where
     [ "match" <+> toBurst ex' <+> "with"
     , indent 2 $ align $ vsep $ fmap ("|" <+>) $ fmap burstMatch x0
     ]
-  toBurst Unit = parens ""
+  toBurst Unit = parens "U1"
 
 instance ToHaskell Decl where
   toHaskell (Fix txt ty ex) =

@@ -16,6 +16,7 @@ import Eval (eval)
 import Data.Typeable (Typeable)
 import System.IO.Unsafe (unsafePerformIO)
 import Types (bd_context)
+import GHC.Generics (U1, K1, Rec0)
 
 runBurst
     :: forall a b
@@ -25,7 +26,10 @@ runBurst
     -> Maybe (a -> b)
 runBurst f as = unsafePerformIO $ do
   let doc' = mkExample f as
-      doc = doc' { bd_context = toBurstDecl @Bool : bd_context doc' }
+      doc = doc' { bd_context = toBurstDecl @Bool
+                              : toBurstDecl @(U1 Bool)
+                              : toBurstDecl @(Rec0 Bool Bool)
+                              : bd_context doc' }
 
   let fp = "/tmp/burst"
   writeFile fp $ show $ toBurst doc

@@ -28,6 +28,7 @@ library
       Eval
       Example
       GenType
+      Iso
       Lib
       Parser
       Pretty
@@ -40,7 +41,8 @@ library
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
     , hint
     , megaparsec
     , parser-combinators

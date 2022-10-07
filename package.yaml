@@ -28,6 +28,7 @@ dependencies:
 - prettyprinter
 - syb
 - process
+- QuickCheck
 
 ghc-options:
 - -Wall

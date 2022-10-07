@@ -1,15 +1,16 @@
 {-# LANGUAGE AllowAmbiguousTypes      #-}
 {-# LANGUAGE DataKinds                #-}
+{-# LANGUAGE DefaultSignatures        #-}
+{-# LANGUAGE DeriveGeneric            #-}
+{-# LANGUAGE FlexibleContexts         #-}
 {-# LANGUAGE FlexibleInstances        #-}
 {-# LANGUAGE KindSignatures           #-}
+{-# LANGUAGE OverloadedStrings        #-}
 {-# LANGUAGE ScopedTypeVariables      #-}
 {-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeApplications         #-}
+{-# LANGUAGE TypeOperators            #-}
 {-# LANGUAGE TypeSynonymInstances     #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module GenType (toBurstDecl, BurstRef(..), ToBurstType(..), Marshall(..)) where
 
@@ -27,6 +28,15 @@ import Data.Char (toLower)
 data Nat = O | S Nat
   deriving (Eq, Ord, Show, Generic)
 
+instance Marshall () where
+  marshall () = "U1"
+instance BurstRef () where
+  burstRef = "u1"
+
+instance (Marshall a, Marshall b) => Marshall (a, b)
+instance BurstRef (a, b) where
+  burstRef = "pair"
+
 instance Marshall Nat
 instance BurstRef Nat
 
@@ -36,6 +46,17 @@ instance BurstRef [a]
 instance Marshall Bool
 instance BurstRef Bool
 
+instance BurstRef (U1 a)
+instance Marshall (U1 a)
+
+instance BurstRef ((f :+: g) a)
+instance (Marshall (f a), Marshall (g a)) => Marshall ((f :+: g) a)
+
+instance BurstRef ((f :*: g) a)
+instance (Marshall (f a), Marshall (g a)) => Marshall ((f :*: g) a)
+
+instance BurstRef (K1 _1 _2 a)
+instance (Marshall a) => Marshall (K1 _1 a x)
 
 class ToBurstType a where
   toBurstType :: Type
@@ -70,6 +91,8 @@ typeName :: forall nm. KnownSymbol nm => Text
 typeName = T.pack $
   case lowerFirst $ symbolVal $ Proxy @nm of
     "[]" -> "list"
+    "(,)" -> "pair"
+    ":*:" -> "pair"
     t -> t
 
 conName :: forall nm. KnownSymbol nm => Text
@@ -77,6 +100,8 @@ conName = T.pack $
   case symbolVal $ Proxy @nm of
     "[]" -> "Nil"
     ":" -> "Cons"
+    "(,)" -> "Pair"
+    ":*:" -> "Pair"
     t -> t
 
 type GToBurstCons :: (K.Type -> K.Type) -> Constraint
