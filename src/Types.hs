@@ -3,6 +3,8 @@ module Types where
 import Data.Text (Text)
 import Data.Data (Data)
 import Data.Dynamic (Typeable)
+import Data.String
+import qualified Data.Text as T
 
 data Decl
   = Fix Text Type Expr
@@ -24,6 +26,14 @@ data Expr
   | Var Text
   | Match Expr [(Pat, Expr)]
   | Unit
+  | Equal Expr Expr
+  deriving (Eq, Ord, Show, Data, Typeable)
+
+instance IsString Expr where
+  fromString = Var . T.pack
+
+data Example
+  = Example Expr Expr
   deriving (Eq, Ord, Show, Data, Typeable)
 
 data TyDecl = TyDecl Text [(Text, Type)]
@@ -32,5 +42,14 @@ data TyDecl = TyDecl Text [(Text, Type)]
 data Pat
   = RecordCtor Text
   | Raw Text
+  deriving (Eq, Ord, Show, Data, Typeable)
+
+
+data BurstDoc = BurstDoc
+  { bd_context :: [TyDecl]
+  , bd_goal :: Type
+  , bd_with :: [Either TyDecl Decl]
+  , bd_satisfying :: Either Expr [Example]
+  }
   deriving (Eq, Ord, Show, Data, Typeable)
 

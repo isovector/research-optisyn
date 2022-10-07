@@ -27,6 +27,7 @@ dependencies:
 - parser-combinators
 - prettyprinter
 - syb
+- process
 
 ghc-options:
 - -Wall

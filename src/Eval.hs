@@ -6,8 +6,7 @@ module Eval where
 import Language.Haskell.Interpreter
 import Types
 import Data.Typeable (Typeable)
-import Prettyprinter (pretty)
-import Pretty ()
+import Pretty (toHaskell)
 import qualified Data.Text as T
 
 
@@ -16,6 +15,6 @@ eval d@(Fix n _ _) =
   runInterpreter $ do
     set $ [ languageExtensions := [NPlusKPatterns, ImplicitPrelude] ]
     setImportsF [ModuleImport "Prelude" NotQualified NoImportList]
-    runStmt $ show $ pretty d
+    runStmt $ show $ toHaskell d
     interpret (T.unpack n) $ as @a
 

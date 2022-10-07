@@ -11,7 +11,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module GenType (toBurstDecl, ToBurstType(..), Marshall(..)) where
+module GenType (toBurstDecl, BurstRef(..), ToBurstType(..), Marshall(..)) where
 
 import GHC.Generics
 import Types
@@ -40,7 +40,7 @@ class ToBurstType a where
   default toBurstType :: (GToBurstType (Rep a)) => Type
   toBurstType = gtoBurstType @(Rep a)
 
-class Marshall a where
+class (BurstRef a, GToBurstDecl (Rep a)) => Marshall a where
   marshall :: a -> Expr
 
   default marshall :: (Generic a, GMarshall (Rep a)) => a -> Expr
@@ -113,6 +113,9 @@ instance (GMarshall f) => GMarshall (M1 _1 _2 f) where
 
 instance {-# OVERLAPPING #-} (KnownSymbol nm, GMarshall f) => GMarshall (M1 C ('MetaCons nm _1 _2) f) where
   gmarshall (M1 a) = Apply (Var $ T.pack $ symbolVal $ Proxy @nm) $ gmarshall a
+
+instance {-# OVERLAPPING #-} (KnownSymbol nm) => GMarshall (M1 C ('MetaCons nm _1 _2) U1) where
+  gmarshall (M1 _) = Var $ T.pack $ symbolVal $ Proxy @nm
 
 instance (GMarshall f, GMarshall g) => GMarshall (f :+: g) where
   gmarshall (L1 a) = gmarshall a

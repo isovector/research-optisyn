@@ -15,8 +15,7 @@ import Data.Foldable (asum)
 import Data.Char (isAlphaNum, isAlpha)
 import qualified Data.Text as T
 import Control.Monad (void, (<=<))
-import Prettyprinter (pretty)
-import Pretty ()
+import Pretty (toBurst, toHaskell)
 import Eval (eval)
 import Transform
 import Language.Haskell.Interpreter hiding (eval)
@@ -122,9 +121,9 @@ decl = do
 main :: IO ()
 main = do
   let res = fmap fixTerm $ parse decl "interactive" test
-  putStrLn $ either errorBundlePretty (show . pretty) res
-  putStrLn $ show $ pretty $ toBurstDecl @(Bool)
-  putStrLn $ show $ pretty $ toBurstDecl @(Maybe Bool)
+  putStrLn $ either errorBundlePretty (show . toHaskell) res
+  putStrLn $ show $ toBurst $ toBurstDecl @(Bool)
+  putStrLn $ show $ toBurst $ toBurstDecl @(Maybe Bool)
   either (putStrLn . errorBundlePretty) (putStrLn . either showGHC (\f -> show $ f ([False, True, True, False], 1)) <=< eval @(([Bool], Int) -> [Bool])) res
 
 showGHC :: InterpreterError -> String
