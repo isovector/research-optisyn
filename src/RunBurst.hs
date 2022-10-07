@@ -14,9 +14,15 @@ import Transform
 import Parser
 import Eval (eval)
 import Data.Typeable (Typeable)
+import System.IO.Unsafe (unsafePerformIO)
 
-runBurst :: forall a b. (Typeable a, Typeable b, Marshall a, Marshall b) => (a -> b) -> [a] -> IO (Maybe (a -> b))
-runBurst f as = do
+runBurst
+    :: forall a b
+     . (Typeable a, Typeable b, Marshall a, Marshall b)
+    => (a -> b)
+    -> [a]
+    -> Maybe (a -> b)
+runBurst f as = unsafePerformIO $ do
   let doc = mkExample f as
   let fp = "/tmp/burst"
   writeFile fp $ show $ toBurst doc
@@ -32,8 +38,5 @@ runBurst f as = do
           putStrLn $ showGHC ie
           pure Nothing
         Right fab -> pure $ Just fab
-
-
-
-
+{-# NOINLINE runBurst #-}
 

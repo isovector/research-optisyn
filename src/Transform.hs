@@ -8,6 +8,8 @@ import Types
 import Generics.SYB.Aliases
 import Data.Text (Text)
 import Data.Generics (everywhere)
+import qualified Data.Text as T
+import Data.Char (toUpper)
 
 
 natPat :: Pat -> Pat
@@ -17,6 +19,15 @@ natPat = \case
   RecordCtor "S" -> Raw "n+1"
   RecordCtor "O" -> Raw "0"
   o -> o
+
+upperTy :: Type -> Type
+upperTy = \case
+  TyVar txt -> TyVar $ T.pack $ firstUpper $ T.unpack txt
+  t -> t
+
+firstUpper :: String -> String
+firstUpper [] = []
+firstUpper (c : str) = toUpper c : str
 
 vars :: Text -> Text
 vars = \case
@@ -33,5 +44,5 @@ vars = \case
 
 
 fixTerm :: GenericT
-fixTerm = everywhere $ mkT natPat `extT` vars
+fixTerm = everywhere $ mkT natPat `extT` vars `extT` upperTy
 

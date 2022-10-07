@@ -8,7 +8,6 @@ import Text.Megaparsec
 import Data.Void (Void)
 import Data.Text (Text)
 import Control.Monad.Combinators.Expr
-import Text.Megaparsec.Char.Lexer
 import Text.Megaparsec.Char (space1)
 import Types
 import Data.Foldable (asum)
@@ -20,16 +19,20 @@ import Eval (eval)
 import Transform
 import Language.Haskell.Interpreter hiding (eval)
 import GenType
+import qualified Text.Megaparsec.Char.Lexer as L
 
 type Parser = Parsec Void Text
 
 
 sp :: Parser ()
-sp = space space1 (skipLineComment "--") (skipBlockComment "{-" "-}")
+sp = L.space space1 (L.skipLineComment "--") (L.skipBlockComment "{-" "-}")
 
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme sp
 
 l :: Text -> Parser ()
-l = void . symbol sp
+l = void . L.symbol sp
+
 
 okFirst :: Char -> Bool
 okFirst '_' = True
@@ -40,11 +43,11 @@ okAfter '_' = True
 okAfter x = isAlphaNum x
 
 var :: Parser Text
-var = do
+var = try $ do
   r <- asum
     [ bracketed $ var
     , l "Util.Id.Id" *> between (l "\"") "\"" rawvar
-    , lexeme sp rawvar
+    , L.lexeme sp rawvar
     ]
   case elem r ["match", "with", "fun"] of
     False -> pure r
@@ -108,7 +111,7 @@ typeTerm = asum
 
 parseType :: Parser Type
 parseType = makeExprParser typeTerm
-  [ [ InfixR $ TyTuple <$ symbol sp "*"   ]
+  [ [ InfixR $ TyTuple <$ l "*"   ]
   , [ InfixR $ TyArr <$ l "->"  ]
   ]
 
@@ -141,9 +144,9 @@ showx = errMsg
 
 test :: Text
 test = T.unlines
-  [ "fix (f : bool -> boo) ="
+  [ "fix (f : bool -> bool) ="
   , "  fun (x : bool) ->"
-  , "    match (x with"
+  , "    match x with"
   , "      | False _ -> True"
   , "      | True _ -> False"
   ]
