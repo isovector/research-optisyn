@@ -4,14 +4,18 @@
 {-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeFamilies             #-}
 {-# LANGUAGE UndecidableInstances     #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 
-module ShowType (ShowType) where
+module ShowType (ShowTypeSym, CanShowType) where
 
 import GHC.Generics
 import GHC.TypeLits
 import Data.Kind (Type)
 import Data.Functor.Identity (Identity)
 
+
+type CanShowType a = KnownSymbol (ShowTypeSym a)
 
 type RepName :: (Type -> Type) -> Symbol
 type family RepName a where
@@ -30,9 +34,9 @@ type family Fill k f where
   Fill (k1 -> k2) f = Fill k2 (f (FillHole k1))
 
 
-type ShowType :: k -> Symbol
-type family ShowType t where
-  ShowType (t :: k) = ShowType' k t
+type ShowTypeSym :: k -> Symbol
+type family ShowTypeSym t where
+  ShowTypeSym (t :: k) = ShowType' k t
 
 
 type ShowType' :: forall k -> k -> Symbol

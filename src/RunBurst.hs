@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module RunBurst where
 
@@ -18,18 +19,18 @@ import System.IO.Unsafe (unsafePerformIO)
 import Types (bd_context)
 import GHC.Generics (U1, K1, Rec0)
 import Data.Maybe (isJust)
+import ShowType (CanShowType)
 
 runBurst
     :: forall a b
-     . (Typeable a, Typeable b, Marshall a, Marshall b)
+     . (Typeable a, Typeable b, CanShowType a, CanShowType b, Marshall a, Marshall b)
     => (a -> b)
     -> [a]
     -> Maybe (a -> b)
 runBurst f as = unsafePerformIO $ do
   let doc' = mkExample f as
       doc = doc' { bd_context = toBurstDecl @Bool
-                              : toBurstDecl @(U1 Bool)
-                              : toBurstDecl @(Rec0 Bool Bool)
+                              -- : toBurstDecl @()
                               : bd_context doc' }
 
   let fp = "/tmp/burst"

@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Example where
 
@@ -8,11 +9,12 @@ import Types
 import GenType
 import Data.List (nub)
 import Data.Functor ((<&>))
+import ShowType (CanShowType)
 
-mkExample :: forall a b. (Marshall a, Marshall b) => (a -> b) -> [a] -> BurstDoc
+mkExample :: forall a b. (CanShowType a, CanShowType b, Marshall a, Marshall b) => (a -> b) -> [a] -> BurstDoc
 mkExample fab as = BurstDoc
   { bd_context = nub [toBurstDecl @a, toBurstDecl @b]
-  , bd_goal = TyArr (TyVar $ burstRef @a) (TyVar $ burstRef @b)
+  , bd_goal = TyArr (TyVar $ typeName @a) (TyVar $ typeName @b)
   , bd_with = []
   , bd_satisfying
       = Right $ as <&> \a -> mkIO a $ fab a
