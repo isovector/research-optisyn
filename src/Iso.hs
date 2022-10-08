@@ -58,6 +58,6 @@ findFunctor f b = do
 main :: IO ()
 main = do
   print . isJust =<< findFunctor @U1 (reverse @Bool . snd @()) ()
-  print . isJust =<< findFunctor @(Rec0 Bool) (reverse @Bool . snd @()) ()
-  print . isJust =<< findFunctor @(Rec0 Bool :*: Rec0 Bool) (reverse @Bool . snd @()) ()
+  -- print . isJust =<< findFunctor @(Rec0 Bool) (reverse @Bool . snd @()) ()
+  -- print . isJust =<< findFunctor @(Rec0 Bool :*: Rec0 Bool) (reverse @Bool . snd @()) ()
 

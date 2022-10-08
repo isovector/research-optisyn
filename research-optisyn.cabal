@@ -33,6 +33,7 @@ library
       Parser
       Pretty
       RunBurst
+      ShowType
       Transform
       Types
   other-modules:

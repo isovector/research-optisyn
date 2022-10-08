@@ -20,6 +20,11 @@ natPat = \case
   RecordCtor "O" -> Raw "0"
   o -> o
 
+varsE :: Expr -> Expr
+varsE = \case
+  Var "(:)" -> Var "uncurry (:)"
+  t -> t
+
 upperTy :: Type -> Type
 upperTy = \case
   TyVar txt -> TyVar $ T.pack $ firstUpper $ T.unpack txt
@@ -31,18 +36,20 @@ firstUpper (c : str) = toUpper c : str
 
 vars :: Text -> Text
 vars = \case
-  "list" -> "[a]"
+  "builtinlist" -> "[a]"
+  "builtinpair" -> "(,)"
   "nat" -> "Int"
-  "Nil" -> "[]"
-  "Cons" -> "(:)"
+  "BuiltinNil" -> "[]"
+  "BuiltinCons" -> "(:)"
+  "BuiltinPair" -> "(,)"
   "O" -> "0"
   "S" -> "(n+1)"
-  "Un_Cons" -> "(\\(a : as) -> (a, as))"
+  "Un_BuiltinCons" -> "(\\(a : as) -> (a, as))"
   "Un_S" -> "(subtract 1)"
   (t :: Text) -> t
 
 
 
 fixTerm :: GenericT
-fixTerm = everywhere $ mkT natPat `extT` vars `extT` upperTy
+fixTerm = everywhere $ mkT natPat `extT` vars `extT` upperTy `extT` varsE
 

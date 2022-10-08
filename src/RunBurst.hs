@@ -17,6 +17,7 @@ import Data.Typeable (Typeable)
 import System.IO.Unsafe (unsafePerformIO)
 import Types (bd_context)
 import GHC.Generics (U1, K1, Rec0)
+import Data.Maybe (isJust)
 
 runBurst
     :: forall a b
@@ -47,4 +48,9 @@ runBurst f as = unsafePerformIO $ do
           pure Nothing
         Right fab -> pure $ Just fab
 {-# NOINLINE runBurst #-}
+
+
+yo :: IO ()
+yo = do
+  print $ isJust $ runBurst (reverse @Bool) [[], [True, False, False, True, True], [False, True], [True]]
 

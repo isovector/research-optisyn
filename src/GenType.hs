@@ -35,7 +35,7 @@ instance BurstRef () where
 
 instance (Marshall a, Marshall b) => Marshall (a, b)
 instance BurstRef (a, b) where
-  burstRef = "pair"
+  burstRef = "builtinpair"
 
 instance Marshall Nat
 instance BurstRef Nat
@@ -90,18 +90,18 @@ instance (KnownSymbol nm, GToBurstCons f) => GToBurstDecl (D1 ('MetaData nm _1 _
 typeName :: forall nm. KnownSymbol nm => Text
 typeName = T.pack $
   case lowerFirst $ symbolVal $ Proxy @nm of
-    "[]" -> "list"
-    "(,)" -> "pair"
-    ":*:" -> "pair"
+    "[]" -> "builtinlist"
+    "(,)" -> "builtinpair"
+    ":*:" -> "builtinpair"
     t -> t
 
 conName :: forall nm. KnownSymbol nm => Text
 conName = T.pack $
   case symbolVal $ Proxy @nm of
-    "[]" -> "Nil"
-    ":" -> "Cons"
-    "(,)" -> "Pair"
-    ":*:" -> "Pair"
+    "[]" -> "BuiltinNil"
+    ":" -> "BuiltinCons"
+    "(,)" -> "BuiltinPair"
+    ":*:" -> "BuiltinPair"
     t -> t
 
 type GToBurstCons :: (K.Type -> K.Type) -> Constraint
