@@ -16,8 +16,17 @@
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module GenType (toBurstDecl, ToBurstType(..), Marshall(..), typeName) where
+module GenType
+  ( toBurstDecl
+  , ToBurstType(..)
+  , Marshall(..)
+  , typeName
+  , necessaryTypes
+  , GNecessaryTypes
+  ) where
 
+import qualified Data.Set as S
+import Data.Set (Set)
 import GHC.Generics hiding (conName)
 import Types
 import Data.Kind (Constraint)
@@ -151,4 +160,41 @@ instance GToBurstType U1 where
 instance GMarshall a U1 where
   gmarshall _ = Unit
 
+necessaryTypes
+    :: forall a. (GNecessaryTypes (Rep a), GToBurstDecl a (Rep a))
+    => Set TyDecl
+necessaryTypes = goNecessaryTypes @a mempty
+
+goNecessaryTypes
+    :: forall a. (GNecessaryTypes (Rep a), GToBurstDecl a (Rep a))
+    => Set TyDecl
+    -> Set TyDecl
+goNecessaryTypes = gnecessaryTypes @(Rep a) . S.insert (toBurstDecl @a)
+
+
+type GNecessaryTypes :: (K.Type -> K.Type) -> Constraint
+class GNecessaryTypes f where
+  gnecessaryTypes :: Set TyDecl -> Set TyDecl
+
+instance GNecessaryTypes f => GNecessaryTypes (M1 _1 _2 f) where
+  gnecessaryTypes = gnecessaryTypes @f
+
+instance (GNecessaryTypes f, GNecessaryTypes g) => GNecessaryTypes (f :*: g) where
+  gnecessaryTypes = gnecessaryTypes @f . gnecessaryTypes @g
+
+instance (GNecessaryTypes f, GNecessaryTypes g) => GNecessaryTypes (f :+: g) where
+  gnecessaryTypes = gnecessaryTypes @f . gnecessaryTypes @g
+
+instance GNecessaryTypes U1 where
+  gnecessaryTypes = id
+
+instance GNecessaryTypes V1 where
+  gnecessaryTypes = id
+
+instance (GToBurstDecl a (Rep a), GNecessaryTypes (Rep a)) => GNecessaryTypes (K1 _1 a) where
+  gnecessaryTypes t =
+    let def = toBurstDecl @a
+     in case S.member def t of
+          False -> goNecessaryTypes @a $ S.insert def t
+          True -> t
 

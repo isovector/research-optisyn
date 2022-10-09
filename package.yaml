@@ -29,6 +29,7 @@ dependencies:
 - syb
 - process
 - QuickCheck
+- containers
 
 ghc-options:
 - -Wall

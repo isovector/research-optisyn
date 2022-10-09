@@ -44,6 +44,7 @@ library
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , containers
     , hint
     , megaparsec
     , parser-combinators

@@ -5,33 +5,46 @@
 
 module RunBurst where
 
-import System.Process
-import Example
-import GenType
-import Pretty (toBurst, toHaskell)
-import Text.Megaparsec
+import           Data.Maybe (isJust)
+import qualified Data.Set as S
 import qualified Data.Text as T
-import Transform
-import Parser
-import Eval (eval)
-import Data.Typeable (Typeable)
-import System.IO.Unsafe (unsafePerformIO)
-import Types (bd_context)
-import GHC.Generics (U1, K1, Rec0)
-import Data.Maybe (isJust)
-import ShowType (CanShowType)
+import           Data.Typeable (Typeable)
+import           Eval (eval)
+import           Example
+import           GHC.Generics (Rep)
+import           GenType
+import           Parser
+import           Pretty (toBurst, toHaskell)
+import           ShowType (CanShowType)
+import           System.IO.Unsafe (unsafePerformIO)
+import           System.Process
+import           Text.Megaparsec
+import           Transform
+import           Types (bd_context)
 
 runBurst
     :: forall a b
-     . (Typeable a, Typeable b, CanShowType a, CanShowType b, Marshall a, Marshall b)
+     . ( Typeable a
+       , Typeable b
+       , CanShowType a
+       , CanShowType b
+       , Marshall a
+       , Marshall b
+       , GNecessaryTypes (Rep a)
+       , GNecessaryTypes (Rep b)
+       )
     => (a -> b)
     -> [a]
     -> Maybe (a -> b)
 runBurst f as = unsafePerformIO $ do
   let doc' = mkExample f as
-      doc = doc' { bd_context = toBurstDecl @Bool
-                              -- : toBurstDecl @()
-                              : bd_context doc' }
+      doc = doc'
+          { bd_context = S.toList $ mconcat
+              [ necessaryTypes @a
+              , necessaryTypes @b
+              , S.fromList $ bd_context doc'
+              ]
+          }
 
   let fp = "/tmp/burst"
   writeFile fp $ show $ toBurst doc
