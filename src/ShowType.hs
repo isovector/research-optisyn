@@ -7,7 +7,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module ShowType (ShowTypeSym, CanShowType) where
+module ShowType (ShowTypeSym, ShowHsTypeSym, CanShowType) where
 
 import GHC.Generics
 import GHC.TypeLits
@@ -15,7 +15,7 @@ import Data.Kind (Type)
 import Data.Functor.Identity (Identity)
 
 
-type CanShowType a = KnownSymbol (ShowTypeSym a)
+type CanShowType a = (KnownSymbol (ShowTypeSym a), KnownSymbol (ShowHsTypeSym a))
 
 type RepName :: (Type -> Type) -> Symbol
 type family RepName a where
@@ -38,6 +38,10 @@ type ShowTypeSym :: k -> Symbol
 type family ShowTypeSym t where
   ShowTypeSym (t :: k) = ShowType' k t
 
+type ShowHsTypeSym :: k -> Symbol
+type family ShowHsTypeSym t where
+  ShowHsTypeSym (t :: k) = ShowHsType' k t
+
 
 type ShowType' :: forall k -> k -> Symbol
 type family ShowType' k f where
@@ -51,4 +55,14 @@ type family ShowType' k f where
   ShowType' (Type -> Type) [] = "List"
   ShowType' (Type -> Type -> Type) (,) = "Pair"
   ShowType' k f = RepName (Rep (Fill k f))
+
+type ShowHsType' :: forall k -> k -> Symbol
+type family ShowHsType' k f where
+  ShowHsType' k ((f :: k1 -> k) a) =
+    AppendSymbol
+      (ShowHsType' (k1 -> k) f)
+      (AppendSymbol " ("
+        (AppendSymbol (ShowHsType' k1 a) ")"))
+  ShowHsType' Type Int = "Int"
+  ShowHsType' k f = RepName (Rep (Fill k f))
 

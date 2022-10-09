@@ -22,7 +22,7 @@ module GenType
   ( toBurstDecl
   , ToBurstType(..)
   , Marshall(..)
-  , typeName
+  , burstTyName
   , necessaryTypes
   , GNecessaryTypes
   ) where
@@ -39,7 +39,7 @@ import Data.Proxy (Proxy(Proxy))
 import qualified Data.Text as T
 import Data.Text (Text)
 import Data.Char (toLower)
-import ShowType (ShowTypeSym, CanShowType)
+import ShowType (ShowTypeSym, CanShowType, ShowHsTypeSym)
 import Pretty (toHaskell)
 
 
@@ -81,20 +81,21 @@ class GToBurstDecl a f where
   gtoBurstDecl :: TyDecl
 
 instance (CanShowType a, GToBurstCons a f) => GToBurstDecl a (D1 ('MetaData nm _1 _2 _3) f) where
-  gtoBurstDecl = TyDecl (typeName @a) $ gtoBurstCons @a @f
+  gtoBurstDecl = TyDecl (burstTyName @a) (hsTyName @a) $ gtoBurstCons @a @f
 
 
-mktypeName :: forall nm. (KnownSymbol nm) => Text
-mktypeName = T.pack $
-  case lowerFirst $ symbolVal $ Proxy @nm of
-    "[]" -> "IMPOSSIBLE?"
-    "(,)" -> "IMPOSSIBLE?"
-    ":*:" -> "IMPOSSIBLE?"
-    t -> t
+burstTyName :: forall a nm. (nm ~ ShowTypeSym a, KnownSymbol nm) =>Text
+burstTyName =
+  T.pack $
+    case lowerFirst $ symbolVal $ Proxy @nm of
+      "[]" -> "IMPOSSIBLE?"
+      "(,)" -> "IMPOSSIBLE?"
+      ":*:" -> "IMPOSSIBLE?"
+      t -> t
 
 
-typeName :: forall a nm. (nm ~ ShowTypeSym a, KnownSymbol nm) =>Text
-typeName = mktypeName @nm
+hsTyName :: forall a nm. (nm ~ ShowHsTypeSym a, KnownSymbol nm) =>Text
+hsTyName = T.pack $ symbolVal $ Proxy @nm
 
 conName :: forall ty nm. (KnownSymbol ty, KnownSymbol nm) => Text
 conName = T.pack $ mappend (symbolVal (Proxy @ty) <> "_") $
@@ -188,7 +189,7 @@ class GToBurstType f where
   gtoBurstType :: Type
 
 instance (nm ~ ShowTypeSym a, KnownSymbol nm) => GToBurstType (K1 _1 a) where
-  gtoBurstType = TyVar $ typeName @a
+  gtoBurstType = TyVar $ burstTyName @a
 
 
 

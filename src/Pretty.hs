@@ -85,7 +85,7 @@ instance ToBurst Pat where
   toBurst (Raw txt) = toBurst txt
 
 instance ToBurst TyDecl where
-  toBurst (TyDecl txt x0) = vcat
+  toBurst (TyDecl txt _ x0) = vcat
     [ "type" <+> pretty txt <+> "="
     , indent 2 $ vcat $ fmap burstCon x0
     ]

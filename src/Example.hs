@@ -14,7 +14,7 @@ import ShowType (CanShowType)
 mkExample :: forall a b. (CanShowType a, CanShowType b, Marshall a, Marshall b) => (a -> b) -> [a] -> BurstDoc
 mkExample fab as = BurstDoc
   { bd_context = nub [toBurstDecl @a, toBurstDecl @b]
-  , bd_goal = TyArr (TyVar $ typeName @a) (TyVar $ typeName @b)
+  , bd_goal = TyArr (TyVar $ burstTyName @a) (TyVar $ burstTyName @b)
   , bd_with = []
   , bd_satisfying
       = Right $ as <&> \a -> mkIO a $ fab a

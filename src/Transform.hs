@@ -17,10 +17,12 @@ import Data.Char (toUpper)
 
 
 patMap :: [TyDecl] -> Map Text Text
-patMap = foldMap $ \td -> flip foldMap (td_cons td) $ \dc ->
-  M.fromList
-    [ (dc_burst dc, dc_haskell dc)
-    ]
+patMap = foldMap $ \td ->
+  mappend (M.singleton (td_bust td) (td_haskell td)) $
+    flip foldMap (td_cons td) $ \dc ->
+      M.fromList
+        [ (dc_burst dc, dc_haskell dc)
+        ]
 
 unmangleMap :: [TyDecl] -> Map Text Expr
 unmangleMap = foldMap $ \td -> flip foldMap (td_cons td) $ \dc ->
@@ -30,6 +32,12 @@ unmangleMap = foldMap $ \td -> flip foldMap (td_cons td) $ \dc ->
     ]
 
 
+tys :: Map Text Text -> Type -> Type
+tys m = \case
+  TyVar x
+    | Just x' <- M.lookup x m
+    -> TyVar x'
+  t -> t
 
 natPat :: Map Text Text -> Pat -> Pat
 natPat m = \case
@@ -75,9 +83,9 @@ vars m = \case
 
 
 fixTerm :: [TyDecl] -> GenericT
-fixTerm tys = do
-  let um = unmangleMap tys
-      pm = patMap tys
+fixTerm tds = do
+  let um = unmangleMap tds
+      pm = patMap tds
 
-  everywhere $ mkT (natPat pm) `extT` vars um -- `extT` upperTy `extT` varsE
+  everywhere $ mkT (natPat pm) `extT` vars um `extT` tys pm -- `extT` upperTy `extT` varsE
 
