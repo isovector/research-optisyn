@@ -22,11 +22,11 @@ patMap = foldMap $ \td -> flip foldMap (td_cons td) $ \dc ->
     [ (dc_burst dc, dc_haskell dc)
     ]
 
-unmangleMap :: [TyDecl] -> Map Text Text
+unmangleMap :: [TyDecl] -> Map Text Expr
 unmangleMap = foldMap $ \td -> flip foldMap (td_cons td) $ \dc ->
   M.fromList
-    [ (dc_burst dc, dc_to dc)
-    , ("Un_" <> dc_burst dc, dc_un dc)
+    [ (dc_burst dc, dc_build dc)
+    , ("Un_" <> dc_burst dc, dc_unbuild dc)
     ]
 
 
@@ -55,11 +55,11 @@ firstUpper :: String -> String
 firstUpper [] = []
 firstUpper (c : str) = toUpper c : str
 
-vars :: Map Text Text -> Expr -> Expr
+vars :: Map Text Expr -> Expr -> Expr
 vars m = \case
   Var x
     | Just x' <- M.lookup x m
-    -> Var x'
+    -> x'
   t -> t
   -- "builtinlist" -> "[a]"
   -- "builtinpair" -> "(,)"

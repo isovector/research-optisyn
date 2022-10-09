@@ -120,8 +120,8 @@ instance (ty ~ ShowTypeSym a, KnownSymbol ty, KnownSymbol nm, GToBurstType f, GD
         (conName @ty @nm)
         (fromSym @nm)
         (gtoBurstType @f)
-        (mkTo nm vars expr)
-        (mkFrom nm vars expr)
+        (Var $ mkTo nm vars expr)
+        (Var $ mkFrom nm vars expr)
 
 
 mkTo :: Text -> [Text] -> Text -> Text
