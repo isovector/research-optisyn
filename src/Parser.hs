@@ -125,13 +125,12 @@ decl = do
 
 
 
-main :: IO ()
-main = do
-  let res = fmap fixTerm $ parse decl "interactive" test
-  putStrLn $ either errorBundlePretty (show . toHaskell) res
-  putStrLn $ show $ toBurst $ toBurstDecl @(Bool)
-  putStrLn $ show $ toBurst $ toBurstDecl @(Maybe Bool)
-  either (putStrLn . errorBundlePretty) (putStrLn . either showGHC (\f -> show $ f ([False, True, True, False], 1)) <=< eval @(([Bool], Int) -> [Bool])) res
+-- main :: IO ()
+-- main = do
+--   let res = fmap fixTerm $ parse decl "interactive" test
+--   putStrLn $ either errorBundlePretty (show . toHaskell) res
+--   putStrLn $ show $ toBurst $ toBurstDecl @(Bool)
+--   putStrLn $ show $ toBurst $ toBurstDecl @(Maybe Bool)
 
 showGHC :: InterpreterError -> String
 showGHC (UnknownError s) = s

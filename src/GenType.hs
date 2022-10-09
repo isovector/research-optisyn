@@ -109,7 +109,10 @@ instance (ty ~ ShowTypeSym a, KnownSymbol ty, KnownSymbol nm, GToBurstType f) =>
   gtoBurstCons = pure $ DataCon (conName @ty @nm) (fromSym @nm) (gtoBurstType @f)
 
 fromSym :: forall nm. KnownSymbol nm => Text
-fromSym = T.pack $ symbolVal $ Proxy @nm
+fromSym = T.pack $
+  case symbolVal $ Proxy @nm of
+    ":" -> "(:)"
+    t -> t
 
 instance (GToBurstCons a f, GToBurstCons a g) => GToBurstCons a (f :+: g) where
   gtoBurstCons = gtoBurstCons @a @f ++ gtoBurstCons @a @g

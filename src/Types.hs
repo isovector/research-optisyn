@@ -44,7 +44,10 @@ data DataCon = DataCon
   }
   deriving (Eq, Ord, Show, Data, Typeable)
 
-data TyDecl = TyDecl Text [DataCon]
+data TyDecl = TyDecl
+  { td_name :: Text
+  , td_cons :: [DataCon]
+  }
   deriving (Eq, Ord, Show, Data, Typeable)
 
 data Pat

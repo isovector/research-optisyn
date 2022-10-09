@@ -44,20 +44,20 @@ instance (InjList f a, InjList g a) => InjList (f :*: g) a where
 
 
 
-findFunctor
-    :: forall f a b r
-     . (InjList f a, Arbitrary a, Marshall (f a), Marshall b, Marshall r, Typeable (f a), Typeable b, Typeable r)
-    => ((b, [a]) -> r)
-    -> b
-    -> IO (Maybe ((b, f a) -> r))
-findFunctor f b = do
-  points <- generate $ vectorOf 10 $ vectorOf (size @f @a) $ arbitrary @a
-  pure $ runBurst (f . fmap intoList) $ fmap ((b, ) . fromList @f @a) points
+-- findFunctor
+--     :: forall f a b r
+--      . (InjList f a, Arbitrary a, Marshall (f a), Marshall b, Marshall r, Typeable (f a), Typeable b, Typeable r)
+--     => ((b, [a]) -> r)
+--     -> b
+--     -> IO (Maybe ((b, f a) -> r))
+-- findFunctor f b = do
+--   points <- generate $ vectorOf 10 $ vectorOf (size @f @a) $ arbitrary @a
+--   pure $ runBurst (f . fmap intoList) $ fmap ((b, ) . fromList @f @a) points
 
 
-main :: IO ()
-main = do
-  print . isJust =<< findFunctor @U1 (reverse @Bool . snd @()) ()
-  -- print . isJust =<< findFunctor @(Rec0 Bool) (reverse @Bool . snd @()) ()
-  -- print . isJust =<< findFunctor @(Rec0 Bool :*: Rec0 Bool) (reverse @Bool . snd @()) ()
+-- main :: IO ()
+-- main = do
+--   print . isJust =<< findFunctor @U1 (reverse @Bool . snd @()) ()
+--   -- print . isJust =<< findFunctor @(Rec0 Bool) (reverse @Bool . snd @()) ()
+--   -- print . isJust =<< findFunctor @(Rec0 Bool :*: Rec0 Bool) (reverse @Bool . snd @()) ()
 

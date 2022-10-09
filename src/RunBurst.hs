@@ -38,19 +38,20 @@ runBurst
     -> Maybe (a -> b)
 runBurst f as = unsafePerformIO $ do
   let doc' = mkExample f as
+      decls = S.toList $ mconcat
+                [ necessaryTypes @a
+                , necessaryTypes @b
+                , S.fromList $ bd_context doc'
+                ]
       doc = doc'
-          { bd_context = S.toList $ mconcat
-              [ necessaryTypes @a
-              , necessaryTypes @b
-              , S.fromList $ bd_context doc'
-              ]
+          { bd_context = decls
           }
 
   let fp = "/tmp/burst"
   writeFile fp $ show $ toBurst doc
   res <- fmap (unlines . takeWhile (/= ";") . lines) $ readProcess "burst" [fp] ""
   putStrLn res
-  case fmap fixTerm $ parse decl "interactive" $ T.pack res of
+  case fmap (fixTerm decls) $ parse decl "interactive" $ T.pack res of
     Left peb -> do
       putStrLn $ errorBundlePretty peb
       pure Nothing
