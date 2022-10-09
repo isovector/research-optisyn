@@ -4,17 +4,19 @@
 {-# LANGUAGE DeriveGeneric            #-}
 {-# LANGUAGE FlexibleContexts         #-}
 {-# LANGUAGE FlexibleInstances        #-}
+{-# LANGUAGE GADTs                    #-}
 {-# LANGUAGE KindSignatures           #-}
+{-# LANGUAGE MultiParamTypeClasses    #-}
 {-# LANGUAGE OverloadedStrings        #-}
 {-# LANGUAGE ScopedTypeVariables      #-}
 {-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeApplications         #-}
 {-# LANGUAGE TypeOperators            #-}
 {-# LANGUAGE TypeSynonymInstances     #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE UndecidableInstances     #-}
+
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module GenType
   ( toBurstDecl
@@ -25,6 +27,7 @@ module GenType
   , GNecessaryTypes
   ) where
 
+import Control.Monad.State (State, evalState, modify, get)
 import qualified Data.Set as S
 import Data.Set (Set)
 import GHC.Generics hiding (conName)
@@ -37,6 +40,7 @@ import qualified Data.Text as T
 import Data.Text (Text)
 import Data.Char (toLower)
 import ShowType (ShowTypeSym, CanShowType)
+import Pretty (toHaskell)
 
 
 data Nat = O | S Nat
@@ -105,8 +109,70 @@ type GToBurstCons :: K.Type -> (K.Type -> K.Type) -> Constraint
 class GToBurstCons a f where
   gtoBurstCons :: [DataCon]
 
-instance (ty ~ ShowTypeSym a, KnownSymbol ty, KnownSymbol nm, GToBurstType f) => GToBurstCons a (C1 ('MetaCons nm _1 _2) f) where
-  gtoBurstCons = pure $ DataCon (conName @ty @nm) (fromSym @nm) (gtoBurstType @f)
+instance (ty ~ ShowTypeSym a, KnownSymbol ty, KnownSymbol nm, GToBurstType f, GDestruct f) => GToBurstCons a (C1 ('MetaCons nm _1 _2) f) where
+  gtoBurstCons = do
+    let nm = fromSym @nm
+        (vars, T.pack . show . toHaskell -> expr)
+          = flip evalState 'a' $ gdestruct @f
+
+    pure $
+      DataCon
+        (conName @ty @nm)
+        (fromSym @nm)
+        (gtoBurstType @f)
+        (mkTo nm vars expr)
+        (mkFrom nm vars expr)
+
+
+mkTo :: Text -> [Text] -> Text -> Text
+mkTo nm _ "()" = nm
+mkTo nm vars expr = mconcat
+  [ "(\\("
+  , expr
+  , ") -> "
+  , T.intercalate " " $ nm : vars
+  , ")"
+  ]
+
+mkFrom :: Text -> [Text] -> Text -> Text
+mkFrom nm _ "()" = nm
+mkFrom nm vars expr = mconcat
+  [ "(\\("
+  , T.intercalate " " $ nm : vars
+  , ") -> "
+  , expr
+  , ")"
+  ]
+
+
+type GDestruct :: (K.Type -> K.Type) -> Constraint
+class GDestruct f where
+  gdestruct :: State Char ([Text], Expr)
+
+next :: State Char Text
+next = do
+  c <- get
+  modify $ toEnum . (+ 1) . fromEnum
+  pure $ T.pack $ pure c
+
+instance GDestruct U1 where
+  gdestruct = pure ([], Unit)
+
+
+instance GDestruct f => GDestruct (S1 _1 f) where
+  gdestruct = gdestruct @f
+
+instance (GDestruct f, GDestruct g) => GDestruct (f :*: g) where
+  gdestruct = do
+    (as, e1) <- gdestruct @f
+    (bs, e2) <- gdestruct @g
+    pure (as <> bs, Tuple e1 e2)
+
+instance GDestruct (K1 _1 a) where
+  gdestruct = do
+    c <- next
+    pure ([c], Var c)
+
 
 fromSym :: forall nm. KnownSymbol nm => Text
 fromSym = T.pack $

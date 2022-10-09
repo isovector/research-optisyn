@@ -47,6 +47,7 @@ library
     , containers
     , hint
     , megaparsec
+    , mtl
     , parser-combinators
     , prettyprinter
     , process

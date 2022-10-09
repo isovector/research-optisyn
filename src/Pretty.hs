@@ -104,8 +104,10 @@ instance ToBurst Example where
   toBurst (Example ex' ex2) = brackets (toBurst ex') <+> "->" <+> toBurst ex2
 
 burstCon :: DataCon -> Doc ann
-burstCon (DataCon txt _ TyUnit) = "|" <+> toBurst txt
-burstCon (DataCon txt _ ty) = "|" <+> toBurst txt <+> "of" <+> toBurst ty
+burstCon (DataCon txt _ TyUnit _ _) =
+  "|" <+> toBurst txt
+burstCon (DataCon txt _ ty _ _) =
+  "|" <+> toBurst txt <+> "of" <+> toBurst ty
 
 
 hsMatch :: (Pat, Expr) -> Doc ann

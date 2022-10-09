@@ -41,6 +41,8 @@ data DataCon = DataCon
   { dc_burst   :: Text
   , dc_haskell :: Text
   , dc_type    :: Type
+  , dc_to      :: Text
+  , dc_un      :: Text
   }
   deriving (Eq, Ord, Show, Data, Typeable)
 

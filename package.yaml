@@ -30,6 +30,7 @@ dependencies:
 - process
 - QuickCheck
 - containers
+- mtl
 
 ghc-options:
 - -Wall

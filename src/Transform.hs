@@ -14,13 +14,20 @@ import Data.Text (Text)
 import Data.Generics (everywhere)
 import qualified Data.Text as T
 import Data.Char (toUpper)
-import Control.Applicative (liftA2)
-import Debug.Trace (traceShowId)
 
+
+patMap :: [TyDecl] -> Map Text Text
+patMap = foldMap $ \td -> flip foldMap (td_cons td) $ \dc ->
+  M.fromList
+    [ (dc_burst dc, dc_haskell dc)
+    ]
 
 unmangleMap :: [TyDecl] -> Map Text Text
-unmangleMap = foldMap $ \td -> flip foldMap (td_cons td) $
-  liftA2 M.singleton dc_burst dc_haskell
+unmangleMap = foldMap $ \td -> flip foldMap (td_cons td) $ \dc ->
+  M.fromList
+    [ (dc_burst dc, dc_to dc)
+    , ("Un_" <> dc_burst dc, dc_un dc)
+    ]
 
 
 
@@ -68,7 +75,9 @@ vars m = \case
 
 
 fixTerm :: [TyDecl] -> GenericT
-fixTerm (unmangleMap -> um)
-  = everywhere
-  $ mkT (natPat um) `extT` vars um -- `extT` upperTy `extT` varsE
+fixTerm tys = do
+  let um = unmangleMap tys
+      pm = patMap tys
+
+  everywhere $ mkT (natPat pm) `extT` vars um -- `extT` upperTy `extT` varsE
 
