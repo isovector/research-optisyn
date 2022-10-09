@@ -94,10 +94,13 @@ conName = T.pack $ mappend (symbolVal (Proxy @ty) <> "_") $
 
 type GToBurstCons :: K.Type -> (K.Type -> K.Type) -> Constraint
 class GToBurstCons a f where
-  gtoBurstCons :: [(Text, Type)]
+  gtoBurstCons :: [DataCon]
 
 instance (ty ~ ShowTypeSym a, KnownSymbol ty, KnownSymbol nm, GToBurstType f) => GToBurstCons a (C1 ('MetaCons nm _1 _2) f) where
-  gtoBurstCons = pure (conName @ty @nm, gtoBurstType @f)
+  gtoBurstCons = pure $ DataCon (conName @ty @nm) (fromSym @nm) (gtoBurstType @f)
+
+fromSym :: forall nm. KnownSymbol nm => Text
+fromSym = T.pack $ symbolVal $ Proxy @nm
 
 instance (GToBurstCons a f, GToBurstCons a g) => GToBurstCons a (f :+: g) where
   gtoBurstCons = gtoBurstCons @a @f ++ gtoBurstCons @a @g

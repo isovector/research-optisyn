@@ -36,7 +36,15 @@ data Example
   = Example Expr Expr
   deriving (Eq, Ord, Show, Data, Typeable)
 
-data TyDecl = TyDecl Text [(Text, Type)]
+
+data DataCon = DataCon
+  { dc_burst   :: Text
+  , dc_haskell :: Text
+  , dc_type    :: Type
+  }
+  deriving (Eq, Ord, Show, Data, Typeable)
+
+data TyDecl = TyDecl Text [DataCon]
   deriving (Eq, Ord, Show, Data, Typeable)
 
 data Pat
